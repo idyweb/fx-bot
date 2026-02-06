@@ -12,10 +12,7 @@ RUN mkdir -p /config/.wine && \
     chmod -R 755 /config/.wine
 
 # Update package lists and upgrade packages
-RUN apt-get update
-
-# Install required packages
-RUN apt-get install -y \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     dos2unix \
     python3-pip \
     wget \
