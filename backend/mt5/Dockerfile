@@ -1,38 +1,34 @@
 # Stage 1: Base image with apt packages
-FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbullseye-8446af38-ls104 AS base
+FROM ghcr.io/linuxserver/baseimage-kasmvnc:debianbookworm AS base
 
 ENV TITLE=MetaTrader
 ENV WINEARCH=win64
 ENV WINEPREFIX="/config/.wine"
 ENV DISPLAY=:0
+ENV HOME=/config
 
 # Ensure the directory exists with correct permissions
 RUN mkdir -p /config/.wine && \
     chown -R abc:abc /config/.wine && \
     chmod -R 755 /config/.wine
 
-# Update package lists and upgrade packages
-RUN sed -i "s/bullseye-backports/bullseye/g" /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends \
-    dos2unix \
-    python3-pip \
-    wget \
-    python3-pyxdg \
-    netcat \
-    && pip3 install --upgrade pip
-
-# Add WineHQ repository key and APT source
-RUN wget -q https://dl.winehq.org/wine-builds/winehq.key > /dev/null 2>&1\
-    && apt-key add winehq.key \
-    && add-apt-repository 'deb https://dl.winehq.org/wine-builds/debian/ bullseye main' \
-    && rm winehq.key
-
-# Add i386 architecture and update package lists
-RUN dpkg --add-architecture i386 \
-    && apt-get update
-
-# Install WineHQ stable package and dependencies
-RUN apt-get install --install-recommends -y \
-    winehq-stable \
+# Install Wine and dependencies from Bookworm repositories
+# Bookworm has modern Wine, so we don't need external WineHQ repos
+RUN dpkg --add-architecture i386 && \
+    apt-get update && \
+    apt-get install -y --no-install-recommends \
+        wine \
+        wine32 \
+        wine64 \
+        libwine \
+        fonts-wine \
+        cabextract \
+        dos2unix \
+        python3-pip \
+        python3-full \
+        wget \
+        unzip \
+        netcat-openbsd \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
