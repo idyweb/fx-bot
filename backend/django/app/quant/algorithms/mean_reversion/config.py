@@ -3,11 +3,11 @@ from app.utils.constants import CRYPTOCURRENCIES, TIMEZONE, MT5Timeframe
 PAIRS = ['NG', 'BRN', 'WTI', 'XAGUSD', 'XAUUSD', 'XAUEUR', 'EURUSD', 'EURGBP', 'USDJPY', 'USDCAD', 'USDCHF', 'AUDUSD', 'NZDUSD']
 MAIN_TIMEFRAME = MT5Timeframe.M15
 
-TP_PNL_MULTIPLIER = 0.5
-SL_PNL_MULTIPLIER = -0.5
+TP_PNL_MULTIPLIER = 0.6   # Target profit = 60% of capital (1:3 risk:reward)
+SL_PNL_MULTIPLIER = -0.2  # Max loss = 20% of capital (e.g., $2 on $10)
 LEVERAGE = 200
 DEVIATION = 20
-CAPITAL_PER_TRADE = 100
+CAPITAL_PER_TRADE = 10
 
 TRAILING_STOP_STEPS = [
     {'trigger_pnl_multiplier': 4.00, 'new_sl_pnl_multiplier': 3.50},
