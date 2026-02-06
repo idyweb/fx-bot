@@ -1,0 +1,3 @@
+#!/command/with-contenv bash
+# source /scripts/01-start.sh
+/scripts/01-start.sh

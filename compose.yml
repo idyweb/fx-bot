@@ -53,7 +53,6 @@ services:
       # Docker provider configuration
       - --providers.docker
       - --providers.docker.exposedbydefault=false
-      - --providers.docker.apiVersion=1.44
 
       # Entrypoints configuration
       - --entrypoints.http.address=:80
