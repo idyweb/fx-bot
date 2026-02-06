@@ -36,6 +36,15 @@ app.register_blueprint(error_bp)
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 if __name__ == '__main__':
-    if not mt5.initialize():
-        logger.error("Failed to initialize MT5.")
-    app.run(host='0.0.0.0', port=int(os.environ.get('MT5_API_PORT')))
+    # Try to initialize MT5 multiple times
+    for i in range(5):
+        if mt5.initialize():
+            logger.info("MT5 initialized successfully.")
+            break
+        else:
+            logger.error(f"Failed to initialize MT5 (Attempt {i+1}/5). Error: {mt5.last_error()}")
+            if i < 4:
+                import time
+                time.sleep(5)
+    
+    app.run(host='0.0.0.0', port=int(os.environ.get('MT5_API_PORT', 5001)))
