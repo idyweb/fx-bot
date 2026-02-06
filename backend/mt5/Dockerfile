@@ -12,7 +12,7 @@ RUN mkdir -p /config/.wine && \
     chmod -R 755 /config/.wine
 
 # Update package lists and upgrade packages
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN sed -i "s/bullseye-backports/bullseye/g" /etc/apt/sources.list && apt-get update && apt-get install -y --no-install-recommends \
     dos2unix \
     python3-pip \
     wget \
