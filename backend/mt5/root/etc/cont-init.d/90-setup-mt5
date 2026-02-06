@@ -9,6 +9,12 @@ export WINEPREFIX="/config/.wine"
 export DISPLAY=:0
 export HOME=/config
 
+# Fix XDG_RUNTIME_DIR for Wine
+export XDG_RUNTIME_DIR=/tmp/runtime-abc
+mkdir -p "$XDG_RUNTIME_DIR"
+chown abc:abc "$XDG_RUNTIME_DIR"
+chmod 0700 "$XDG_RUNTIME_DIR"
+
 echo "Running installation scripts as abc..."
 
 exec s6-setuidgid abc /bin/bash -c '
@@ -16,6 +22,7 @@ exec s6-setuidgid abc /bin/bash -c '
     export WINEPREFIX="/config/.wine"
     export DISPLAY=:0
     export HOME=/config
+    export XDG_RUNTIME_DIR=/tmp/runtime-abc
     
     /scripts/03-install-mono.sh
     /scripts/04-install-mt5.sh

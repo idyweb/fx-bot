@@ -1,10 +1,10 @@
 #!/command/with-contenv bash
 
-# Ensure environment variables are set
 export WINEARCH=win64
 export WINEPREFIX="/config/.wine"
 export DISPLAY=:0
 export HOME=/config
+export XDG_RUNTIME_DIR=/tmp/runtime-abc
 
 echo "Starting MT5 Python API Service..."
 exec s6-setuidgid abc wine python -u /app/app.py

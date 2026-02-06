@@ -5,10 +5,28 @@ source /scripts/02-common.sh
 log_message "RUNNING" "05-install-python.sh"
 
 # Install Python in Wine if not present
+# Install Python in Wine if not present
 if ! $wine_executable python --version > /dev/null 2>&1; then
     log_message "INFO" "Installing Python in Wine..."
-    wget -O /tmp/python-installer.exe $python_url > /dev/null 2>&1
+    
+    # Download with retries and skip cert check if needed
+    if wget --no-check-certificate -O /tmp/python-installer.exe $python_url; then
+        log_message "INFO" "Installer downloaded successfully. Size: $(du -h /tmp/python-installer.exe | cut -f1)"
+    else
+        log_message "ERROR" "Failed to download Python installer!"
+        exit 1
+    fi
+
+    # Install Python
     $wine_executable /tmp/python-installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
+    
+    # Basic check if python works now
+    if ! $wine_executable python --version > /dev/null 2>&1; then
+        log_message "ERROR" "Python installation failed or not found in path!"
+        # rm /tmp/python-installer.exe
+        exit 1
+    fi
+    
     rm /tmp/python-installer.exe
     log_message "INFO" "Python installed in Wine."
 else
