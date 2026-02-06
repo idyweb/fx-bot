@@ -1,0 +1,7 @@
+#!/command/with-contenv bash
+
+# Wait for X/VNC to be ready (rudimentary check or just let it fail/restart)
+# The base image starts VNC in parallel via another service.
+
+echo "Starting MT5 Python API Service..."
+exec s6-setuidgid abc wine python -u /app/app.py
