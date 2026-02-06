@@ -6,6 +6,10 @@ log_message "RUNNING" "07-start-wine-flask.sh"
 
 log_message "INFO" "Starting Flask server in Wine environment..."
 
+# Wait for MT5 terminal to fully initialize
+log_message "INFO" "Waiting for MT5 terminal to be ready..."
+sleep 20
+
 # Run the Flask app using Wine's Python
 wine python -u /app/app.py &
 

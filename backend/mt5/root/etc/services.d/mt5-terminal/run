@@ -1,0 +1,20 @@
+#!/command/with-contenv bash
+
+# Ensure environment variables are set
+export WINEARCH=win64
+export WINEPREFIX="/config/.wine"
+export DISPLAY=:0
+export HOME=/config
+export XDG_RUNTIME_DIR=/tmp/runtime-abc
+
+MT5_TERMINAL="/config/.wine/drive_c/Program Files/MetaTrader 5/terminal64.exe"
+
+echo "Starting MT5 Terminal..."
+
+# Start MT5 terminal in background
+s6-setuidgid abc wine "$MT5_TERMINAL" &
+
+# Wait for terminal to be ready (check for process and give it time to load)
+sleep 15
+
+echo "MT5 Terminal started."
