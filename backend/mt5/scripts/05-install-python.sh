@@ -19,6 +19,10 @@ if ! $wine_executable python --version > /dev/null 2>&1; then
     # Install Python
     $wine_executable /tmp/python-installer.exe /quiet InstallAllUsers=1 PrependPath=1 Include_test=0
     
+    # Wait for installation to complete (it backgrounds)
+    log_message "INFO" "Waiting for Python installation..."
+    sleep 30
+    
     # Basic check if python works now
     if ! $wine_executable python --version > /dev/null 2>&1; then
         log_message "ERROR" "Python installation failed or not found in path!"
