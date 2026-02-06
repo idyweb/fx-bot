@@ -14,6 +14,8 @@ services:
   traefik:
     image: traefik:2.10
     container_name: traefik
+    environment:
+      - DOCKER_API_VERSION=1.44
     ports:
       - 80:80 # HTTP port
       - 443:443 # HTTPS port
