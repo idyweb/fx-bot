@@ -37,12 +37,14 @@ app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
 if __name__ == '__main__':
     # Try to initialize MT5 multiple times
+    # Try to initialize MT5 multiple times with explicit path
+    mt5_path = "C:/Program Files/MetaTrader 5/terminal64.exe"
     for i in range(5):
-        if mt5.initialize():
+        if mt5.initialize(path=mt5_path):
             logger.info("MT5 initialized successfully.")
             break
         else:
-            logger.error(f"Failed to initialize MT5 (Attempt {i+1}/5). Error: {mt5.last_error()}")
+            logger.error(f"Failed to initialize MT5 (Attempt {i+1}/5). Path: {mt5_path}, Error: {mt5.last_error()}")
             if i < 4:
                 import time
                 time.sleep(5)
