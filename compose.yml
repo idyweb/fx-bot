@@ -76,6 +76,8 @@ services:
       context: backend/mt5
       dockerfile: Dockerfile
     container_name: mt5
+    ports:
+      - "3001:3000" # Expose VNC for local access (3001 -> 3000 inside)
     volumes:
       - ./config:/config
     networks:
@@ -83,6 +85,9 @@ services:
       - default
     env_file:
       - .env
+    environment:
+      - CUSTOM_USER=abc
+      - PASSWORD=abc
     restart: unless-stopped
     labels:
       <<: *default-labels
