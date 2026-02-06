@@ -1,8 +1,8 @@
-numpy==1.22.4 
-pandas==1.4.2
+numpy==1.24.4
+pandas==2.0.3
 pytz
 python-dotenv
 flasgger
 python-json-logger
 flask
-MetaTrader5
+MetaTrader5==5.0.33
