@@ -94,3 +94,6 @@ logs
 *.sqlite3
 
 .env
+
+# MT5 Data
+config/
