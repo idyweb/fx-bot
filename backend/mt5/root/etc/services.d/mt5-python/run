@@ -1,7 +1,10 @@
 #!/command/with-contenv bash
 
-# Wait for X/VNC to be ready (rudimentary check or just let it fail/restart)
-# The base image starts VNC in parallel via another service.
+# Ensure environment variables are set
+export WINEARCH=win64
+export WINEPREFIX="/config/.wine"
+export DISPLAY=:0
+export HOME=/config
 
 echo "Starting MT5 Python API Service..."
 exec s6-setuidgid abc wine python -u /app/app.py

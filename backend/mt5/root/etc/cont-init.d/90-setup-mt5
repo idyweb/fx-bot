@@ -3,12 +3,20 @@
 echo "Fixing permissions for /config..."
 chown -R abc:abc /config
 
+# Ensure environment variables are set for the abc user context
+export WINEARCH=win64
+export WINEPREFIX="/config/.wine"
+export DISPLAY=:0
+export HOME=/config
+
 echo "Running installation scripts as abc..."
-# Run installation scripts as 'abc' user to avoid permission issues
-# Using source 02-common.sh to get environment if needed, but scripts seem standalone
-# We will execute them sequentially
 
 exec s6-setuidgid abc /bin/bash -c '
+    export WINEARCH=win64
+    export WINEPREFIX="/config/.wine"
+    export DISPLAY=:0
+    export HOME=/config
+    
     /scripts/03-install-mono.sh
     /scripts/04-install-mt5.sh
     /scripts/05-install-python.sh
