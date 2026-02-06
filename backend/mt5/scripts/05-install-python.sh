@@ -5,7 +5,6 @@ source /scripts/02-common.sh
 log_message "RUNNING" "05-install-python.sh"
 
 # Install Python in Wine if not present
-# Install Python in Wine if not present
 if ! $wine_executable python --version > /dev/null 2>&1; then
     log_message "INFO" "Installing Python in Wine..."
     

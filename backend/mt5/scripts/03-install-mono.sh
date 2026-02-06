@@ -24,4 +24,5 @@ else
 fi
 
 # Initialize Wine configuration
-winecfg
+# Initialize Wine configuration (headless)
+wineboot -u

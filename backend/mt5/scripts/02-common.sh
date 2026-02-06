@@ -12,7 +12,8 @@ mt5server_port=18812
 log_message() {
     local level=$1
     local message=$2
-    echo "$(date '+%Y-%m-%d %H:%M:%S') - [$level] $message" >> /var/log/mt5_setup.log
+    local timestamp=$(date '+%Y-%m-%d %H:%M:%S')
+    echo "$timestamp - [$level] $message" | tee -a /var/log/mt5_setup.log
 }
 
 # Function to check if a Python package is installed in Wine
