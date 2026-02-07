@@ -51,6 +51,7 @@ class Trade(models.Model):
     max_drawdown = models.FloatField(null=True, blank=True)
     max_profit = models.FloatField(null=True, blank=True)
     closing_reason = models.CharField(max_length=50, null=True, blank=True, choices=CLOSING_REASON_CHOICES)
+    is_partially_closed = models.BooleanField(default=False)  # Track partial close state
 
     # Additional Info
     strategy = models.CharField(max_length=50)

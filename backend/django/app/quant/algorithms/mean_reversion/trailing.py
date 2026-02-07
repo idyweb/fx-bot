@@ -25,7 +25,7 @@ from app.utils.api.data import fetch_data_pos, symbol_info_tick
 from app.utils.api.positions import get_positions
 from app.utils.api.order import modify_sl_tp
 from app.utils.api.ticket import get_order_from_ticket, get_deal_from_ticket
-from app.utils.db.mutation import mutate_trade
+from app.utils.db.mutation import mutate_trade, mark_partial_close
 from app.utils.db.get import get_trade_with_mutations
 from app.quant.algorithms.mean_reversion.config import (
     PAIRS,
@@ -112,8 +112,8 @@ def trailing_stop_algorithm():
                         success = partial_close_position(position.ticket, close_volume)
                         if success:
                             logger.info(f"Partial close triggered for {position.symbol}: closed {close_volume} lots at +{position.profit:.2f} profit")
-                            # Mark trade as partially closed (DB update would go here)
-                            # TODO: Add mutate_trade call to set is_partially_closed = True
+                            # Mark trade as partially closed in database
+                            mark_partial_close(position.ticket)
                 elif position.volume < PARTIAL_CLOSE_MIN_LOTS and position.profit >= partial_trigger_pnl:
                     # Can't split, move SL to breakeven instead
                     logger.info(f"Position {position.ticket} too small to split ({position.volume} lots), moving SL to breakeven")

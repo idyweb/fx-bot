@@ -29,3 +29,19 @@ def mutate_trade(position, current_time, new_sl_price_including_commission, pnl_
     except Exception as e:
         error_msg = f"Error creating TradeClosePricesMutation: {e}\n{traceback.format_exc()}"
         logger.error(error_msg)
+
+
+def mark_partial_close(ticket: int) -> bool:
+    """Mark a trade as partially closed in the database."""
+    try:
+        trade = Trade.objects.get(transaction_broker_id=ticket)
+        trade.is_partially_closed = True
+        trade.save(update_fields=['is_partially_closed'])
+        logger.info(f"Marked Trade {ticket} as partially closed")
+        return True
+    except Trade.DoesNotExist:
+        logger.error(f"No Trade found with transaction_broker_id {ticket}")
+        return False
+    except Exception as e:
+        logger.error(f"Error marking partial close: {e}")
+        return False
