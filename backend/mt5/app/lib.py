@@ -17,14 +17,21 @@ def get_timeframe(timeframe_str: str) -> MT5Timeframe:
         )
 
 
-def close_position(position, deviation=20, magic=0, comment='', type_filling=mt5.ORDER_FILLING_IOC):
+def close_position(position, deviation=20, magic=0, comment='', type_filling=mt5.ORDER_FILLING_IOC, volume=None):
+    """
+    Close a position fully or partially.
+    
+    Args:
+        position: Position dict with 'type', 'ticket', 'symbol', 'volume' keys
+        volume: Optional. If None, closes full position. If specified, closes only that volume (partial close).
+    """
     if 'type' not in position or 'ticket' not in position:
         logger.error("Position dictionary missing 'type' or 'ticket' keys.")
         return None
 
     order_type_dict = {
-        0: mt5.ORDER_TYPE_BUY,
-        1: mt5.ORDER_TYPE_SELL
+        0: mt5.ORDER_TYPE_SELL,  # Close BUY with SELL
+        1: mt5.ORDER_TYPE_BUY    # Close SELL with BUY
     }
 
     position_type = position['type']
@@ -38,8 +45,8 @@ def close_position(position, deviation=20, magic=0, comment='', type_filling=mt5
         return None
 
     price_dict = {
-        0: tick.ask,  # Buy order uses Ask price
-        1: tick.bid   # Sell order uses Bid price
+        0: tick.bid,  # Close BUY at Bid
+        1: tick.ask   # Close SELL at Ask
     }
 
     price = price_dict[position_type]
@@ -47,16 +54,24 @@ def close_position(position, deviation=20, magic=0, comment='', type_filling=mt5
         logger.error(f"Invalid price retrieved for symbol: {position['symbol']}")
         return None
 
+    # Use specified volume or full position volume
+    close_volume = volume if volume is not None else position['volume']
+    
+    # Validate volume doesn't exceed position
+    if close_volume > position['volume']:
+        logger.error(f"Requested close volume {close_volume} exceeds position volume {position['volume']}")
+        return None
+
     request = {
         "action": mt5.TRADE_ACTION_DEAL,
-        "position": position['ticket'],  # select the position you want to close
+        "position": position['ticket'],
         "symbol": position['symbol'],
-        "volume": position['volume'],  # FLOAT
+        "volume": float(close_volume),
         "type": order_type_dict[position_type],
         "price": price,
-        "deviation": deviation,  # INTEGER
-        "magic": magic,          # INTEGER
-        "comment": comment,
+        "deviation": deviation,
+        "magic": magic,
+        "comment": comment if comment else ("Partial Close" if volume else "Full Close"),
         "type_time": mt5.ORDER_TIME_GTC,
         "type_filling": type_filling,
     }
@@ -67,7 +82,7 @@ def close_position(position, deviation=20, magic=0, comment='', type_filling=mt5
         logger.error(f"Failed to close position {position['ticket']}: {order_result.comment}")
         return None
 
-    logger.info(f"Position {position['ticket']} closed successfully.")
+    logger.info(f"Position {position['ticket']} {'partially' if volume else 'fully'} closed. Volume: {close_volume}")
     return order_result
 
 

@@ -347,3 +347,87 @@ def positions_total_endpoint():
     except Exception as e:
         logger.error(f"Error in positions_total: {str(e)}")
         return jsonify({"error": "Internal server error"}), 500
+
+@position_bp.route('/partial_close', methods=['POST'])
+@swag_from({
+    'tags': ['Position'],
+    'parameters': [
+        {
+            'name': 'body',
+            'in': 'body',
+            'required': True,
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'ticket': {'type': 'integer', 'description': 'Position ticket to partially close'},
+                    'volume': {'type': 'number', 'description': 'Volume to close (must be less than position volume)'}
+                },
+                'required': ['ticket', 'volume']
+            }
+        }
+    ],
+    'responses': {
+        200: {
+            'description': 'Partial close executed successfully.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'message': {'type': 'string'},
+                    'result': {'type': 'object'}
+                }
+            }
+        },
+        400: {'description': 'Bad request or failed to partially close.'},
+        500: {'description': 'Internal server error.'}
+    }
+})
+def partial_close_endpoint():
+    """
+    Partial Close Position
+    ---
+    description: Close a portion of an open position. Use this to take partial profits.
+    """
+    try:
+        data = request.get_json()
+        if not data or 'ticket' not in data or 'volume' not in data:
+            return jsonify({"error": "ticket and volume are required"}), 400
+        
+        ticket = data['ticket']
+        close_volume = float(data['volume'])
+        
+        # Minimum lot validation
+        if close_volume < 0.01:
+            return jsonify({"error": "Minimum close volume is 0.01 lots"}), 400
+        
+        # Get position details
+        position = mt5.positions_get(ticket=ticket)
+        if not position:
+            return jsonify({"error": f"Position {ticket} not found"}), 404
+        
+        pos = position[0]
+        
+        # Validate close volume
+        if close_volume >= pos.volume:
+            return jsonify({"error": f"Close volume {close_volume} must be less than position volume {pos.volume}"}), 400
+        
+        # Build position dict for close_position function
+        position_dict = {
+            'type': pos.type,
+            'ticket': pos.ticket,
+            'symbol': pos.symbol,
+            'volume': pos.volume
+        }
+        
+        result = close_position(position_dict, volume=close_volume, comment="Aegis Partial Close")
+        if result is None:
+            return jsonify({"error": "Failed to execute partial close"}), 400
+        
+        return jsonify({
+            "message": f"Partially closed {close_volume} lots of position {ticket}",
+            "result": result._asdict(),
+            "remaining_volume": round(pos.volume - close_volume, 2)
+        })
+    
+    except Exception as e:
+        logger.error(f"Error in partial_close: {str(e)}")
+        return jsonify({"error": "Internal server error"}), 500

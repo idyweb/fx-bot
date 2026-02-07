@@ -35,13 +35,37 @@ from app.quant.algorithms.mean_reversion.config import (
     LEVERAGE,
     DEVIATION,
     CAPITAL_PER_TRADE,
-    TRAILING_STOP_STEPS
+    TRAILING_STOP_STEPS,
+    PARTIAL_CLOSE_ENABLED,
+    PARTIAL_CLOSE_TRIGGER,
+    PARTIAL_CLOSE_PERCENTAGE,
+    PARTIAL_CLOSE_MIN_LOTS
 )
 
 load_dotenv()
 logger = logging.getLogger(__name__)
 
 EPSILON = 1e-4  # Define an appropriate epsilon value
+
+BASE_URL = os.getenv('MT5_API_BASE_URL', 'http://mt5:5001')
+
+def partial_close_position(ticket: int, volume: float) -> bool:
+    """Call MT5 API to partially close a position."""
+    try:
+        response = requests.post(
+            f"{BASE_URL}/partial_close",
+            json={"ticket": ticket, "volume": volume},
+            timeout=10
+        )
+        if response.status_code == 200:
+            logger.info(f"Partial close successful for ticket {ticket}, volume {volume}")
+            return True
+        else:
+            logger.error(f"Partial close failed: {response.text}")
+            return False
+    except Exception as e:
+        logger.error(f"Partial close API error: {e}")
+        return False
 
 
 def trailing_stop_algorithm():
@@ -74,6 +98,27 @@ def trailing_stop_algorithm():
 
             trade = trade_with_mutations.get("trade")
             mutations = trade_with_mutations.get("mutations", [])
+            
+            # === PARTIAL CLOSE LOGIC ===
+            if PARTIAL_CLOSE_ENABLED and not getattr(trade, 'is_partially_closed', False):
+                partial_trigger_pnl = trade.capital * PARTIAL_CLOSE_TRIGGER
+                
+                # Check if profit threshold met and position can be split
+                if position.profit >= partial_trigger_pnl and position.volume >= PARTIAL_CLOSE_MIN_LOTS:
+                    close_volume = round(position.volume * PARTIAL_CLOSE_PERCENTAGE, 2)
+                    
+                    # Ensure close volume is at least minimum lot
+                    if close_volume >= 0.01:
+                        success = partial_close_position(position.ticket, close_volume)
+                        if success:
+                            logger.info(f"Partial close triggered for {position.symbol}: closed {close_volume} lots at +{position.profit:.2f} profit")
+                            # Mark trade as partially closed (DB update would go here)
+                            # TODO: Add mutate_trade call to set is_partially_closed = True
+                elif position.volume < PARTIAL_CLOSE_MIN_LOTS and position.profit >= partial_trigger_pnl:
+                    # Can't split, move SL to breakeven instead
+                    logger.info(f"Position {position.ticket} too small to split ({position.volume} lots), moving SL to breakeven")
+                    # breakeven_price = position.price_open (adjust for spread if needed)
+            # === END PARTIAL CLOSE LOGIC ===
     
             current_sl_pnl, current_sl_pnl_excluding_commission = get_pnl_at_price(
                 position.sl, position.price_open, trade.position_size_usd, trade.leverage,
