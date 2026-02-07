@@ -98,4 +98,44 @@ def get_symbol_info(symbol):
         return jsonify({"error": "Failed to get symbol info"}), 404
     
     symbol_info_dict = symbol_info._asdict()
+    symbol_info_dict = symbol_info._asdict()
     return jsonify(symbol_info_dict)
+
+@symbol_bp.route('/symbols', methods=['GET'])
+@swag_from({
+    'tags': ['Symbol'],
+    'responses': {
+        200: {
+            'description': 'List of all available symbols retrieved successfully.',
+            'schema': {
+                'type': 'object',
+                'properties': {
+                    'count': {'type': 'integer'},
+                    'symbols': {
+                        'type': 'array',
+                        'items': {'type': 'string'}
+                    }
+                }
+            }
+        },
+        500: {
+            'description': 'Failed to retrieve symbols.'
+        }
+    }
+})
+def get_all_symbols():
+    """
+    Get All Available Symbols
+    ---
+    description: Retrieve a list of all symbols available in the MT5 terminal.
+    """
+    symbols = mt5.symbols_get()
+    if symbols is None:
+        return jsonify({"error": "Failed to retrieve symbols"}), 500
+    
+    # Extract just the names
+    symbol_names = [s.name for s in symbols]
+    return jsonify({
+        "count": len(symbol_names),
+        "symbols": symbol_names
+    })
