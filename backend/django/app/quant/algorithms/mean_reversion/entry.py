@@ -16,7 +16,7 @@ from app.utils.market import is_market_open
 from app.quant.indicators.mean_reversion import smc_signals 
 from app.quant.algorithms.mean_reversion.config import (
     PAIRS, MAIN_TIMEFRAME, SL_PNL_MULTIPLIER, TP_PNL_MULTIPLIER,
-    LEVERAGE, DEVIATION, CAPITAL_PER_TRADE
+    LEVERAGE, DEVIATION, CAPITAL_PER_TRADE, AI_ENABLED, AI_MODEL
 )
 from app.utils.db.create import create_trade
 from app.utils.notifications import send_telegram_notification
@@ -25,13 +25,40 @@ load_dotenv()
 logger = logging.getLogger(__name__)
 ai_client = genai.Client(api_key=os.getenv("GEMINI_API_KEY"))
 
-def get_ai_approval(pair, data_snapshot):
+def get_ai_approval(pair, data_snapshot, signal_type):
     """The Agentic Vibe-Check."""
+    if not AI_ENABLED:
+        logger.info(f"AI Bypass: Automatically approving {pair}")
+        return "GO"
+
     try:
-        prompt = f"Analyze {pair} action: {data_snapshot}. Is this a high-probability reversal? Reply 'GO' or 'STOP'."
-        response = ai_client.models.generate_content(model="gemini-2.5-flash-lite", contents=prompt)
-        return response.text.strip().upper()
+        system_instruction = (
+            "You are a conservative Forex Sniper. Your goal is to protect capital. "
+            "Analyze the market structure and 15m price action provided. "
+            "Only approve high-probability setups with clear displacement and FVG retests. "
+            "If the market looks choppy, consolidated, or uncertain, reply 'STOP'. "
+            "If the setup is clean and aligns with trend or clear reversal, reply 'GO'. "
+            "Reply strictly with only one word: 'GO' or 'STOP'."
+        )
+        
+        prompt = f"Analyze {pair} ({signal_type}). OHLC Data:\n{data_snapshot}\nDecision:"
+        
+        response = ai_client.models.generate_content(
+            model=AI_MODEL,
+            contents=prompt,
+            config=genai.types.GenerateContentConfig(system_instruction=system_instruction)
+        )
+        
+        decision = response.text.strip().upper()
+        # Sanitize response
+        if "GO" in decision: decision = "GO"
+        else: decision = "STOP"
+        
+        logger.info(f"[AI] {pair} Analysis -> {decision}")
+        return decision
+        
     except Exception as e:
+        logger.error(f"[AI Error] {e} -> Defaulting to STOP")
         return "STOP"
 
 def entry_algorithm():
@@ -48,7 +75,8 @@ def entry_algorithm():
             last_signal_row = df.iloc[-2]
 
             if last_signal_row['smc_signal'] in ['BULLISH_FVG', 'BEARISH_FVG']:
-                ai_decision = get_ai_approval(pair, df.tail(5).to_string())
+                signal_type = last_signal_row['smc_signal']
+                ai_decision = get_ai_approval(pair, df.tail(5).to_string(), signal_type)
                 
                 if ai_decision != "GO":
                     continue
