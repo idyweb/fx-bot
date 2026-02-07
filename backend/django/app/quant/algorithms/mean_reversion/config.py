@@ -1,6 +1,13 @@
 from app.utils.constants import CRYPTOCURRENCIES, TIMEZONE, MT5Timeframe
 
-PAIRS = ['NG', 'BRN', 'WTI', 'XAGUSD', 'XAUUSD', 'XAUEUR', 'EURUSD', 'EURGBP', 'USDJPY', 'USDCAD', 'USDCHF', 'AUDUSD', 'NZDUSD']
+PAIRS = [
+    # Crypto
+    'BTCUSDm', 'ETHUSDm', 'BNBUSDm', 'SOLUSDm', 'HBARUSDm',
+    # Forex
+    'EURUSDm', 'EURGBPm', 'USDJPYm', 'USDCADm', 'USDCHFm', 'AUDUSDm', 'NZDUSDm',
+    # Commodities
+    'XAUUSDm', 'XAUEURm', 'XAGUSDm', 'XNGUSDm', 'USOILm', 'UKOILm'
+]
 MAIN_TIMEFRAME = MT5Timeframe.M15
 
 TP_PNL_MULTIPLIER = 0.6   # Target profit = 60% of capital (1:3 risk:reward)
