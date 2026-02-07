@@ -23,7 +23,7 @@ PARTIAL_CLOSE_PERCENTAGE = 0.50   # Close 50% of position
 PARTIAL_CLOSE_MIN_LOTS = 0.02     # Minimum lots required to partial close (can't split 0.01)
 
 # AI Agent Settings
-AI_ENABLED = False                 # Set to False to bypass AI check
+AI_ENABLED = True                 # Set to False to bypass AI check
 AI_MODEL = "gemini-2.5-flash-lite"
 
 TRAILING_STOP_STEPS = [
