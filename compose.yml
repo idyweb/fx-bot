@@ -225,7 +225,7 @@ services:
       - grafana-data:/var/lib/grafana
     depends_on:
       - prometheus
-      - traefik
+      - nginx
     ports:
       - 3000:3000
     cpus: 0.5
@@ -338,7 +338,7 @@ services:
       - default
     depends_on:
       - uncomplicated-alert-receiver
-      - traefik
+      - nginx
     labels:
       <<: *default-labels
     logging: *default-logging
@@ -388,7 +388,7 @@ services:
     command: -config.file=/etc/promtail/docker-config.yaml
     depends_on:
       - loki
-      - traefik
+      - nginx
     cpus: 0.5
     mem_limit: 512m
     networks:
