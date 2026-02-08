@@ -12,9 +12,17 @@ MAIN_TIMEFRAME = MT5Timeframe.M15
 
 TP_PNL_MULTIPLIER = 0.6   # Target profit = 60% of capital (1:3 risk:reward)
 SL_PNL_MULTIPLIER = -0.2  # Max loss = 20% of capital (e.g., $2 on $10)
-LEVERAGE = 200
+import os
+
+
+TP_PNL_MULTIPLIER = 0.6   # Target profit = 60% of capital (1:3 risk:reward)
+SL_PNL_MULTIPLIER = -0.2  # Max loss = 20% of capital (e.g., $2 on $10)
+
+# Risk Management (Loaded from .env)
+# Default to SAFE values if env variables are missing
+LEVERAGE = int(os.getenv('RISK_LEVERAGE', 200))
 DEVIATION = 20
-CAPITAL_PER_TRADE = 10
+CAPITAL_PER_TRADE = float(os.getenv('RISK_CAPITAL_PER_TRADE', 2.0)) # Default $2 margin per trade
 
 # Partial Close Settings
 PARTIAL_CLOSE_ENABLED = True
