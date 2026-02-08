@@ -263,7 +263,7 @@ services:
       - prometheus-data:/prometheus
     depends_on:
       - alertmanager
-      - traefik
+      - nginx
     ports:
       - 9090:9090
     cpus: 0.5
