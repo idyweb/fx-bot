@@ -125,6 +125,13 @@ def entry_algorithm():
                 continue
             if not is_market_open(pair):
                 continue
+            
+            # Guard Clause 2: Margin Level Safety Check
+            from app.utils.api.data import account_info
+            acc = account_info()
+            if acc is not None and acc.get('margin_level', 9999) < 500:
+                logger.warning(f"⚠️ High Risk: Margin Level at {acc.get('margin_level', 0):.1f}%. Skipping {pair}.")
+                continue
 
             # Step 1: Get Higher Timeframe Bias
             htf_bias = get_market_bias(pair, htf_timeframe='H4', bars=100)

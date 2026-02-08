@@ -72,3 +72,29 @@ def fetch_data_range(symbol: str, timeframe: MT5Timeframe, from_date: datetime, 
     except Exception as e:
         error_msg = f"Exception fetching data for {symbol} on {timeframe}: {e}\n{traceback.format_exc()}"
         logger.error(error_msg)
+
+
+def account_info() -> dict:
+    """
+    Fetch account information from MT5 API.
+    
+    Returns:
+        Dictionary with account info including:
+        - balance: Account balance
+        - equity: Account equity
+        - margin: Used margin
+        - margin_free: Free margin
+        - margin_level: Margin level percentage (equity/margin * 100)
+    """
+    try:
+        url = f"{BASE_URL}/account_info"
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        
+        data = response.json()
+        logger.info(f"[Account] Balance: ${data.get('balance', 0):.2f}, Margin Level: {data.get('margin_level', 0):.2f}%")
+        return data
+    except Exception as e:
+        error_msg = f"Exception fetching account info: {e}\n{traceback.format_exc()}"
+        logger.error(error_msg)
+        return None
