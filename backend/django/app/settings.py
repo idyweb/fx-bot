@@ -32,15 +32,14 @@ DEBUG = True
 
 ALLOWED_HOSTS = [os.getenv('DJANGO_DOMAIN'), 'localhost', '127.0.0.1', 'example.com', 'django']
 
+# If you need to debug CSRF issues, you can temporarily add:
+CSRF_COOKIE_SECURE = False
+CSRF_COOKIE_DOMAIN = os.getenv('DJANGO_DOMAIN')
+SESSION_COOKIE_SECURE = False
 CSRF_TRUSTED_ORIGINS = [
     f"https://{os.getenv('DJANGO_DOMAIN')}",
     f"http://{os.getenv('DJANGO_DOMAIN')}",
 ]
-
-# If you need to debug CSRF issues, you can temporarily add:
-CSRF_COOKIE_SECURE = True
-CSRF_COOKIE_DOMAIN = os.getenv('DJANGO_DOMAIN')
-SESSION_COOKIE_SECURE = True
 
 LOGGING = {
     'version': 1,
