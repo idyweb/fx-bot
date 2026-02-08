@@ -117,36 +117,37 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
     :return: The equivalent amount in lots
     """
     try:
-        # Get the symbol information
+        # Get the symbol information (returns a DataFrame)
         symbol_info_data = symbol_info(symbol)
-        if symbol_info_data is None:
+        if symbol_info_data is None or symbol_info_data.empty:
             raise ValueError(f"Symbol {symbol} not found in MetaTrader 5")
         
-        # Ensure that 'ask' and 'bid' are scalar values
-        ask_price = symbol_info_data.ask.iloc[0] if isinstance(symbol_info_data.ask, pd.Series) else symbol_info_data.ask
-        bid_price = symbol_info_data.bid.iloc[0] if isinstance(symbol_info_data.bid, pd.Series) else symbol_info_data.bid
+        # Convert DataFrame row to dict for easier scalar access
+        row = symbol_info_data.iloc[0].to_dict()
         
-        ask_price = float(ask_price)
-        bid_price = float(bid_price)
+        ask_price = float(row.get('ask', 0))
+        bid_price = float(row.get('bid', 0))
+        contract_size = float(row.get('trade_contract_size', 100000))
+        lot_step = float(row.get('volume_step', 0.01))
+        spread = float(row.get('spread', 0))
+        volume = float(row.get('volume', 0))
         
         price_dict = {
             'BUY': ask_price,
             'SELL': bid_price
         }
         
-        # Get the contract size and calculate lots
-        contract_size = symbol_info_data.get('trade_contract_size', 100000)
+        # Calculate lots
         lots = usd_amount / (contract_size * price_dict[type])
         
         # Round to the nearest lot step
-        lot_step = symbol_info_data.get('volume_step', 0.01)
         lots = round(lots / lot_step) * lot_step
         
         symbol_info_dict = {
             'ask': ask_price,
             'bid': bid_price,
-            'spread': float(symbol_info_data.spread.iloc[0]) if hasattr(symbol_info_data.spread, 'iloc') else float(symbol_info_data.spread),
-            'volume': float(symbol_info_data.volume.iloc[0]) if hasattr(symbol_info_data.volume, 'iloc') else float(symbol_info_data.volume),
+            'spread': spread,
+            'volume': volume,
             'trade_contract_size': contract_size,
             'volume_step': lot_step
         }
@@ -157,10 +158,10 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
             'symbol_info': symbol_info_dict,
             'usd_amount': usd_amount,
             'type': type,
-            'lots': float(lots)  # Convert to float for proper JSON serialization
+            'lots': float(lots)
         })
 
-        return lots
+        return float(lots)
     except Exception as e:
         error_msg = f"Exception in convert_usd_to_lots: {e}\n{traceback.format_exc()}"
         logger.error(error_msg)
