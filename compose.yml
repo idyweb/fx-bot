@@ -90,7 +90,7 @@ services:
       traefik.http.services.api-mt5-service.loadbalancer.server.port: 5001
     logging: *default-logging
     depends_on:
-      - traefik
+      - nginx
 
   postgres:
     image: postgres:15-alpine
@@ -155,7 +155,7 @@ services:
     cpus: 0.5
     mem_limit: 512m
     depends_on:
-      - traefik
+      - nginx
     networks:
       - default
     labels:
@@ -280,7 +280,7 @@ services:
     restart: unless-stopped
     privileged: true
     depends_on:
-      - traefik
+      - nginx
     volumes:
       - /:/rootfs:ro
       - /var/run:/var/run:rw
@@ -311,7 +311,7 @@ services:
       - "--collector.filesystem.ignored-mount-points"
       - "^/(sys|proc|dev|host|etc|rootfs/var/lib/docker/containers|rootfs/var/lib/docker/overlay2|rootfs/run/docker/netns|rootfs/var/lib/docker/aufs)($$|/)"
     depends_on:
-      - traefik
+      - nginx
     cpus: 0.5
     mem_limit: 512m
     networks:
@@ -353,7 +353,7 @@ services:
     networks:
       - default
     depends_on:
-      - traefik
+      - nginx
     labels:
       <<: *default-labels
     logging: *default-logging
@@ -369,7 +369,7 @@ services:
       - ./monitoring/configs/loki/loki.yaml:/etc/loki/loki.yaml
       - ./monitoring/configs/loki/rules.yaml:/etc/loki/rules/fake/loki-rules.yml
     depends_on:
-      - traefik
+      - nginx
     cpus: 0.5
     mem_limit: 512m
     networks:
