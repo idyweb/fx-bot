@@ -122,8 +122,8 @@ def entry_algorithm():
                 commission = calculate_commission(order_size_usd, pair)
                 
                 # Calculate SL and TP
-                sl_price, _ = get_price_at_pnl(order_capital * SL_PNL_MULTIPLIER, commission, order_size_usd, LEVERAGE, last_tick_price, order_type)
-                tp_price, _ = get_price_at_pnl(order_capital * TP_PNL_MULTIPLIER, commission, order_size_usd, LEVERAGE, last_tick_price, order_type)
+                sl_price, _ = get_price_at_pnl(order_capital * SL_PNL_MULTIPLIER, last_tick_price, order_size_usd, LEVERAGE, order_type, commission)
+                tp_price, _ = get_price_at_pnl(order_capital * TP_PNL_MULTIPLIER, last_tick_price, order_size_usd, LEVERAGE, order_type, commission)
 
                 order = send_market_order(
                     symbol=pair, volume=order_volume_lots, order_type=order_type,
