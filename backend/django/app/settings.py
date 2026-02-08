@@ -210,7 +210,7 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://redis:6379/0
 CELERY_BEAT_SCHEDULE = {
     'run-quant-entry-algorithm': {
         'task': 'quant.tasks.run_quant_entry_algorithm',  # This should match the @shared_task name
-        'schedule': 60.0 * 1,
+        'schedule': 60.0 * 15,  # Every 15 minutes (matches M15 timeframe)
     },
     'run-quant-trailing-stop-algorithm': {
         'task': 'quant.tasks.run_quant_trailing_stop_algorithm',  # This should match the @shared_task name
