@@ -11,64 +11,25 @@ x-common-labels: &default-labels
   stackname: "docker-monitoring-stack-gpnc"
 
 services:
-  traefik:
-    image: traefik:2.10
-    container_name: traefik
-    environment:
-      - DOCKER_API_VERSION=1.44
-    ports:
-      - 80:80 # HTTP port
-      - 443:443 # HTTPS port
+  nginx:
+    image: nginx:latest
+    container_name: nginx
     restart: always
-    labels:
-      # Traefik configuration
-      <<: *default-labels
-      traefik.enable: true
-      traefik.docker.network: traefik-public
-      traefik.http.services.traefik-dashboard.loadbalancer.server.port: 8080
-
-      # HTTP router configuration
-      traefik.http.routers.traefik-dashboard-http.entrypoints: http
-      traefik.http.routers.traefik-dashboard-http.rule: Host(`${TRAEFIK_DOMAIN?Variable not set}`)
-
-      # HTTPS router configuration
-      traefik.http.routers.traefik-dashboard-https.entrypoints: https
-      traefik.http.routers.traefik-dashboard-https.rule: Host(`${TRAEFIK_DOMAIN?Variable not set}`)
-      traefik.http.routers.traefik-dashboard-https.tls: true
-      traefik.http.routers.traefik-dashboard-https.tls.certresolver: le
-      traefik.http.routers.traefik-dashboard-https.service: api@internal
-
-      # HTTPS redirect middleware
-      traefik.http.middlewares.https-redirect.redirectscheme.scheme: https
-      traefik.http.middlewares.https-redirect.redirectscheme.permanent: true
-      traefik.http.routers.traefik-dashboard-http.middlewares: https-redirect
-
-      # HTTP Basic Auth middleware
-      traefik.http.middlewares.admin-auth.basicauth.users: ${TRAEFIK_USERNAME?Variable not set}:${TRAEFIK_HASHED_PASSWORD?Variable not set}
-      traefik.http.routers.traefik-dashboard-https.middlewares: admin-auth
+    ports:
+      - 80:80
+      - 443:443
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro # Docker socket for reading service labels
-      - traefik-public-certificates:/certificates # Certificate storage
-    command:
-      # Docker provider configuration
-      - --providers.docker
-      - --providers.docker.exposedbydefault=false
-
-      # Entrypoints configuration
-      - --entrypoints.http.address=:80
-      - --entrypoints.https.address=:443
-
-      # Let's Encrypt configuration
-      - --certificatesresolvers.le.acme.email=${ACME_EMAIL?Variable not set}
-      - --certificatesresolvers.le.acme.storage=/certificates/acme.json
-      - --certificatesresolvers.le.acme.tlschallenge=true
-
-      # Logging and API configuration
-      - --accesslog
-      - --log
-      - --api
+      - ./nginx/templates:/etc/nginx/templates
+      - static_volume:/app/staticfiles:ro
+    environment:
+      - NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+      - DJANGO_DOMAIN=${DJANGO_DOMAIN}
+      - VNC_DOMAIN=${VNC_DOMAIN}
+      - API_DOMAIN=${API_DOMAIN}
+      - GRAFANA_DOMAIN=${GRAFANA_DOMAIN}
     networks:
-      - traefik-public # Public network for Traefik and other services
+      - default
+      - traefik-public # Keeping the network name for compatibility
     logging: *default-logging
 
   mt5:
