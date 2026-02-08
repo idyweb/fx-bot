@@ -129,7 +129,10 @@ def entry_algorithm():
             # Guard Clause 2: Margin Level Safety Check
             from app.utils.api.data import account_info
             acc = account_info()
-            if acc is not None and acc.get('margin_level', 9999) < 500:
+            
+            # Logic: Only enforce the 500% rule if we are actually using margin.
+            # If margin is 0, we have 100% of our buying power available.
+            if acc is not None and acc.get('margin', 0) > 0 and acc.get('margin_level', 9999) < 500:
                 logger.warning(f"⚠️ High Risk: Margin Level at {acc.get('margin_level', 0):.1f}%. Skipping {pair}.")
                 continue
 
