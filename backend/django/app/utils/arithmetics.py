@@ -126,6 +126,9 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
         ask_price = symbol_info_data.ask.iloc[0] if isinstance(symbol_info_data.ask, pd.Series) else symbol_info_data.ask
         bid_price = symbol_info_data.bid.iloc[0] if isinstance(symbol_info_data.bid, pd.Series) else symbol_info_data.bid
         
+        ask_price = float(ask_price)
+        bid_price = float(bid_price)
+        
         price_dict = {
             'BUY': ask_price,
             'SELL': bid_price

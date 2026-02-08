@@ -43,7 +43,8 @@ def symbol_info(symbol) -> pd.DataFrame:
 
 def fetch_data_pos(symbol: str, timeframe: MT5Timeframe, bars: int) -> pd.DataFrame:
     try:
-        url = f"{BASE_URL}/fetch_data_pos?symbol={symbol}&timeframe={timeframe.value}&bars={bars}"
+        tf_value = timeframe.value if hasattr(timeframe, 'value') else timeframe
+        url = f"{BASE_URL}/fetch_data_pos?symbol={symbol}&timeframe={tf_value}&bars={bars}"
         response = requests.get(url)
         response.raise_for_status()
         
@@ -57,9 +58,10 @@ def fetch_data_pos(symbol: str, timeframe: MT5Timeframe, bars: int) -> pd.DataFr
 def fetch_data_range(symbol: str, timeframe: MT5Timeframe, from_date: datetime, to_date: datetime) -> pd.DataFrame:
     try:
         url = f"{BASE_URL}/copy_rates_range"
+        tf_value = timeframe.value if hasattr(timeframe, 'value') else timeframe
         params = {
             'symbol': symbol,
-            'timeframe': timeframe.value,
+            'timeframe': tf_value,
             'from_date': from_date,
             'to_date': to_date
         }
