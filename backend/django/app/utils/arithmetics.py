@@ -143,10 +143,10 @@ def convert_usd_to_lots(symbol: str, usd_amount: float, type: str) -> float:
         lots = round(lots / lot_step) * lot_step
         
         symbol_info_dict = {
-            'ask': float(symbol_info_data.ask),
-            'bid': float(symbol_info_data.bid),
-            'spread': float(symbol_info_data.spread),
-            'volume': float(symbol_info_data.volume),
+            'ask': ask_price,
+            'bid': bid_price,
+            'spread': float(symbol_info_data.spread.iloc[0]) if hasattr(symbol_info_data.spread, 'iloc') else float(symbol_info_data.spread),
+            'volume': float(symbol_info_data.volume.iloc[0]) if hasattr(symbol_info_data.volume, 'iloc') else float(symbol_info_data.volume),
             'trade_contract_size': contract_size,
             'volume_step': lot_step
         }
