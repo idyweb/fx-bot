@@ -170,17 +170,26 @@ def calculate_commission(order_size_usd: float, pair: str) -> float:
     :return: The total commission for opening and closing the trade.
     """
     try:
-        if pair in CRYPTOCURRENCIES:
-            commission_rate = 0.0005 # 0.05%
-        elif pair in OILS:
-            commission_rate = 0.00025
-        elif pair in METALS:
-            commission_rate = 0.00025
-        elif pair in CURRENCY_PAIRS:
-            commission_rate = 0.00025
+        pair_upper = pair.upper()
+
+        # Crypto (0.05%)
+        # Check for common crypto tickers
+        if any(c in pair_upper for c in ['BTC', 'ETH', 'BNB', 'SOL', 'HBAR', 'DOGE', 'LTC', 'XRP', 'ADA', 'DOT', 'MATIC', 'UNI', 'AVAX', 'LINK', 'ATOM', 'AXS']):
+             commission_rate = 0.0005 
+
+        # Commodities / Metals / Oils (0.025%)
+        elif any(c in pair_upper for c in ['XAU', 'XAG', 'OIL', 'NG', 'WTI', 'BRN']):
+             commission_rate = 0.00025
+
+        # Forex (0.025%) - Fallback for currency pairs
+        # Checks if it looks like a currency pair (contains major currencies)
+        elif any(c in pair_upper for c in ['USD', 'EUR', 'GBP', 'JPY', 'CHF', 'CAD', 'AUD', 'NZD']):
+             commission_rate = 0.00025
+        
         else:
-            # Throw exception
-            raise ValueError(f"Could not calculate commission for unknown pair: {pair}")
+            # Fallback for unknown pairs, assume Forex/Metal rate or log warning
+            logger.warning(f"Unknown pair type for commission: {pair}. Defaulting to 0.025%")
+            commission_rate = 0.00025
 
         commission = order_size_usd * commission_rate # Total commission for both open and close
         return commission
