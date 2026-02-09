@@ -2,6 +2,7 @@ numpy==1.24.4
 pandas>=2.0.0,<3.0
 pytz
 python-dotenv
+jsonschema<4.18.0
 flasgger
 python-json-logger
 flask
