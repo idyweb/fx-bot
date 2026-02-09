@@ -41,6 +41,7 @@ from app.quant.algorithms.mean_reversion.config import (
     PARTIAL_CLOSE_PERCENTAGE,
     PARTIAL_CLOSE_MIN_LOTS
 )
+from app.quant.indicators.mean_reversion import detect_swing_points
 
 load_dotenv()
 logger = logging.getLogger(__name__)
@@ -48,6 +49,7 @@ logger = logging.getLogger(__name__)
 EPSILON = 1e-4  # Define an appropriate epsilon value
 
 BASE_URL = os.getenv('MT5_API_BASE_URL', 'http://mt5:5001')
+
 
 def partial_close_position(ticket: int, volume: float) -> bool:
     """Call MT5 API to partially close a position."""
@@ -66,6 +68,45 @@ def partial_close_position(ticket: int, volume: float) -> bool:
     except Exception as e:
         logger.error(f"Partial close API error: {e}")
         return False
+
+
+def get_dynamic_swing_sl(symbol: str, trade_type: str, point: float) -> float:
+    """
+    Calculates a dynamic Stop Loss based on recent Swing Points.
+    
+    BUY: Trail 20 points below the most recent Swing LOW.
+    SELL: Trail 20 points above the most recent Swing HIGH.
+    """
+    try:
+        # Fetch recent M15 data (last 50 bars)
+        df = fetch_data_pos(symbol, MAIN_TIMEFRAME, 50)
+        if df is None or df.empty:
+            return None
+            
+        # Detect swing points
+        df = detect_swing_points(df, lookback=5)
+        
+        buffer = 20 * point # 20 points buffer
+        
+        if trade_type == 'BUY':
+            # Find most recent valid swing low
+            swing_lows = df['swing_low'].dropna()
+            if not swing_lows.empty:
+                last_swing = swing_lows.iloc[-1]
+                return last_swing - buffer
+                
+        elif trade_type == 'SELL':
+            # Find most recent valid swing high
+            swing_highs = df['swing_high'].dropna()
+            if not swing_highs.empty:
+                last_swing = swing_highs.iloc[-1]
+                return last_swing + buffer
+                
+        return None
+        
+    except Exception as e:
+        logger.error(f"Error calculating dynamic swing SL for {symbol}: {e}")
+        return None
 
 
 def trailing_stop_algorithm():
@@ -168,6 +209,29 @@ def trailing_stop_algorithm():
                     type=trade.type,
                     commission=trade.order_commission
                 )
+
+                # === DYNAMIC SWING TRAILING LOGIC ===
+                # Calculate SL based on market structure (Swing Points)
+                current_tick = symbol_info_tick(position.symbol)
+                point = current_tick['point'].iloc[0] if current_tick is not None else 0.00001
+                
+                swing_sl_price = get_dynamic_swing_sl(position.symbol, trade.type, point)
+                
+                # Logic: Use the "Tightest" valid SL (closest to current price/profit)
+                # Max for BUY (higher is better protection)
+                # Min for SELL (lower is better protection)
+                if swing_sl_price is not None:
+                    if trade.type == 'BUY':
+                        # Ensure we don't loosen the Step SL, but Swing can tighten it
+                        if swing_sl_price > new_sl_price:
+                             new_sl_price = swing_sl_price
+                             # Recalculate PnL for logging
+                             pnl_at_new_sl, _ = get_pnl_at_price(new_sl_price, position.price_open, trade.position_size_usd, trade.leverage, trade.type, trade.order_commission)
+                    else: # SELL
+                        if swing_sl_price < new_sl_price:
+                            new_sl_price = swing_sl_price
+                            pnl_at_new_sl, _ = get_pnl_at_price(new_sl_price, position.price_open, trade.position_size_usd, trade.leverage, trade.type, trade.order_commission)
+                # === END DYNAMIC SWING LOGIC ===
 
                 nothing_is_none = position.profit is not None and trigger_pnl is not None and position.sl is not None and new_sl_price is not None
                 
