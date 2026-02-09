@@ -105,7 +105,6 @@ def send_market_order_endpoint():
             return jsonify({"error": "Failed to get symbol price"}), 400
 
         # Set price based on order type
-        # Set price based on order type
         if data['type'] == 'BUY' or data['type'] == mt5.ORDER_TYPE_BUY:
             request_data["type"] = mt5.ORDER_TYPE_BUY
             request_data["price"] = tick.ask
@@ -127,14 +126,16 @@ def send_market_order_endpoint():
             error_code, error_str = mt5.last_error()
             
             return jsonify({
+                "success": False,
                 "error": f"Order failed: {result.comment}",
                 "mt5_error": error_str,
-                "result": result._asdict()
+                "details": result._asdict()
             }), 400
 
         return jsonify({
+            "success": True,
             "message": "Order executed successfully",
-            "result": result._asdict()
+            "order_result": result._asdict()
         })
     
     except Exception as e:

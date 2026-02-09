@@ -212,25 +212,37 @@ def modify_sl_tp_endpoint():
     """
     try:
         data = request.get_json()
-        if not data or 'position' not in data:
+        if not data:
             return jsonify({"error": "Position data is required"}), 400
         
-        position = data['position']
+        # Support both 'position' and 'ticket' parameter names (Django sends 'ticket')
+        position_ticket = data.get('position') or data.get('ticket')
+        if position_ticket is None:
+            return jsonify({"error": "Position ticket is required (use 'position' or 'ticket' field)"}), 400
+        
         sl = data.get('sl')
         tp = data.get('tp')
         
+        # Get position info from MT5 to retrieve symbol
+        positions = mt5.positions_get(ticket=position_ticket)
+        if not positions:
+            return jsonify({"error": f"Position {position_ticket} not found"}), 404
+        
+        pos = positions[0]
+        
         request_data = {
             "action": mt5.TRADE_ACTION_SLTP,
-            "position": position,
-            "sl": sl,
-            "tp": tp
+            "position": position_ticket,
+            "symbol": pos.symbol,
+            "sl": sl if sl is not None else pos.sl,
+            "tp": tp if tp is not None else pos.tp
         }
         
         result = mt5.order_send(request_data)
         if result.retcode != mt5.TRADE_RETCODE_DONE:
-            return jsonify({"error": f"Failed to modify SL/TP: {result.comment}"}), 400
+            return jsonify({"success": False, "error": f"Failed to modify SL/TP: {result.comment}", "result": result._asdict()}), 400
         
-        return jsonify({"message": "SL/TP modified successfully", "result": result._asdict()})
+        return jsonify({"success": True, "message": "SL/TP modified successfully", "result": result._asdict()})
     
     except Exception as e:
         logger.error(f"Error in modify_sl_tp: {str(e)}")
