@@ -50,9 +50,19 @@ def close_algorithm():
             sleep(2)  # Optional: delay to ensure the trade is fully processed
 
             try:
+                # Define the time range to search for the deal
+                # Use position open time as start, with a small buffer, and current time as end
+                from_date = position.time - pd.Timedelta(minutes=5)
+                to_date = current_time + pd.Timedelta(minutes=5)
+
+                if from_date.tzinfo is None:
+                    from_date = from_date.replace(tzinfo=TIMEZONE)
+                if to_date.tzinfo is None:
+                    to_date = to_date.replace(tzinfo=TIMEZONE)
+
                 # Retrieve the closed order and deal details
                 closed_order = get_order_from_ticket(ticket)
-                closed_deal = get_deal_from_ticket(ticket)
+                closed_deal = get_deal_from_ticket(ticket, from_date=from_date, to_date=to_date)
 
                 if closed_deal is None:
                     error_msg = f"Failed to retrieve deal for closed ticket {ticket}."

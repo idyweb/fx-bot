@@ -191,6 +191,16 @@ def entry_algorithm():
             commission = calculate_commission(order_size_usd, pair)
             
             # Calculate SL and TP
+            point = tick_info.get('point', 0.00001)
+            
+            # Dynamic Min Dist: Max of (50 points, 2x Spread)
+            # This protects against "Invalid Stops" during high volatility
+            ask = tick_info['ask'].iloc[0]
+            bid = tick_info['bid'].iloc[0]
+            current_spread = ask - bid
+            
+            min_dist = max(50 * point, current_spread * 2)
+
             sl_price, _ = get_price_at_pnl(
                 order_capital * SL_PNL_MULTIPLIER, last_tick_price, 
                 order_size_usd, LEVERAGE, order_type, commission
@@ -199,6 +209,18 @@ def entry_algorithm():
                 order_capital * TP_PNL_MULTIPLIER, last_tick_price, 
                 order_size_usd, LEVERAGE, order_type, commission
             )
+
+            # Enforce Minimum Distance
+            if order_type == 'BUY':
+                if last_tick_price - sl_price < min_dist:
+                    sl_price = last_tick_price - min_dist
+                if tp_price - last_tick_price < min_dist:
+                    tp_price = last_tick_price + min_dist
+            else: # SELL
+                if sl_price - last_tick_price < min_dist:
+                    sl_price = last_tick_price + min_dist
+                if last_tick_price - tp_price < min_dist:
+                    tp_price = last_tick_price - min_dist
 
             order = send_market_order(
                 symbol=pair, volume=order_volume_lots, order_type=order_type,
