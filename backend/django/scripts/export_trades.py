@@ -3,6 +3,10 @@ import django
 import json
 from datetime import datetime
 
+import sys
+# Add the project root to sys.path so 'app' module can be found
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 # Setup Django environment
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'app.settings')
 django.setup()
