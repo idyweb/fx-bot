@@ -58,6 +58,9 @@ class Trade(models.Model):
     broker = models.CharField(max_length=50)
     market_type = models.CharField(max_length=50, choices=MARKET_TYPE_CHOICES)
     timeframe = models.CharField(max_length=50, choices=TIMEFRAME_CHOICES)
+    
+
+    setup_id = models.CharField(max_length=100, null=True, blank=True, db_index=True)
 
     def __str__(self):
         return f"{self.type} {self.symbol} at {self.entry_price}"

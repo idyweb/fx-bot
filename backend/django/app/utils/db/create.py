@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime
+from django.utils import timezone
 
 from app.nexus.models import Trade, TradeClosePricesMutation  # Import models
 from app.utils.arithmetics import get_price_at_pnl, get_pnl_at_price
@@ -9,7 +9,12 @@ logger = logging.getLogger(__name__)
 def create_trade(order, symbol: str, capital: float, position_size_usd: float, 
                  leverage: float, commission: float, type: str, broker: str, 
                  market: str, strategy: str, timeframe: str, order_volume: float,
-                 sl: float, tp: float = None):
+                 sl: float, tp: float = None, setup_id: str = None):
+    """
+    Creates a new Trade record in the database.
+    
+    V3 Addition: setup_id parameter for Setup Fingerprint feature.
+    """
     try:
         entry_price = order.get('price')
 
@@ -17,12 +22,12 @@ def create_trade(order, symbol: str, capital: float, position_size_usd: float,
         trade = Trade.objects.create(
             transaction_broker_id=order.get('order'),
             symbol=symbol,
-            entry_time=datetime.now(),  # Modify as needed based on actual data
+            entry_time=timezone.now(),  # V3.1 FIX: Use timezone-aware datetime
             entry_price=entry_price,
             type=type.upper(),  # Ensure matching choices
-            position_size_usd=position_size_usd,  # Example calculation
-            capital=capital,  # Set appropriately
-            leverage=leverage,  # Adjust based on your data
+            position_size_usd=position_size_usd,
+            capital=capital,
+            leverage=leverage,
             order_volume=order_volume,
             order_commission=commission,
             break_even_price=get_price_at_pnl(0, entry_price, position_size_usd, leverage, type, commission)[0],
@@ -31,6 +36,7 @@ def create_trade(order, symbol: str, capital: float, position_size_usd: float,
             market_type=market,
             strategy=strategy,
             timeframe=timeframe,
+            setup_id=setup_id,  # V3: Setup Fingerprint
         )
 
         # Create TradeClosePricesMutation instance
