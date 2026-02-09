@@ -6,6 +6,13 @@ from flasgger import swag_from
 order_bp = Blueprint('order', __name__)
 logger = logging.getLogger(__name__)
 
+# Mapping for type_filling string to MT5 constants
+TYPE_FILLING_MAP = {
+    'ORDER_FILLING_IOC': mt5.ORDER_FILLING_IOC,
+    'ORDER_FILLING_FOK': mt5.ORDER_FILLING_FOK,
+    'ORDER_FILLING_RETURN': mt5.ORDER_FILLING_RETURN,
+}
+
 @order_bp.route('/order', methods=['POST'])
 @swag_from({
     'tags': ['Order'],
@@ -75,6 +82,10 @@ def send_market_order_endpoint():
         if not all(field in data for field in required_fields):
             return jsonify({"error": "Missing required fields"}), 400
 
+        # Get type_filling from map, default to IOC
+        type_filling_str = data.get('type_filling', 'ORDER_FILLING_IOC')
+        type_filling = TYPE_FILLING_MAP.get(type_filling_str, mt5.ORDER_FILLING_IOC)
+
         # Prepare the order request
         request_data = {
             "action": mt5.TRADE_ACTION_DEAL,
@@ -85,7 +96,7 @@ def send_market_order_endpoint():
             "magic": data.get('magic', 0),
             "comment": data.get('comment', ''),
             "type_time": mt5.ORDER_TIME_GTC,
-            "type_filling": data.get('type_filling', mt5.ORDER_FILLING_IOC),
+            "type_filling": type_filling,
         }
 
         # Get current price
