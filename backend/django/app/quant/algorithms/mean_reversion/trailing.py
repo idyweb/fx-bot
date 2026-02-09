@@ -46,7 +46,10 @@ from app.quant.indicators.mean_reversion import detect_swing_points
 load_dotenv()
 logger = logging.getLogger(__name__)
 
-EPSILON = 1e-4  # Define an appropriate epsilon value
+load_dotenv()
+logger = logging.getLogger(__name__)
+
+# EPSILON removed - now dynamic per symbol
 
 BASE_URL = os.getenv('MT5_API_BASE_URL', 'http://mt5:5001')
 
@@ -233,12 +236,15 @@ def trailing_stop_algorithm():
                             pnl_at_new_sl, _ = get_pnl_at_price(new_sl_price, position.price_open, trade.position_size_usd, trade.leverage, trade.type, trade.order_commission)
                 # === END DYNAMIC SWING LOGIC ===
 
+                # Dynamic Epsilon: Only update SL if it moves by at least 5 points
+                epsilon = 5 * point
+
                 nothing_is_none = position.profit is not None and trigger_pnl is not None and position.sl is not None and new_sl_price is not None
                 
                 # Profit is higher than required trigger in this step
                 if nothing_is_none and position.profit >= trigger_pnl:
-                    # New SL is better than current SL
-                    if (trade.type == 'BUY' and new_sl_price > position.sl + EPSILON) or (trade.type == 'SELL' and new_sl_price < position.sl - EPSILON):
+                    # New SL is better than current SL by at least EPSILON
+                    if (trade.type == 'BUY' and new_sl_price > position.sl + epsilon) or (trade.type == 'SELL' and new_sl_price < position.sl - epsilon):
                         sl_info = {
                             'event': 'trailing_stop_triggered',
                             'position_data': {
