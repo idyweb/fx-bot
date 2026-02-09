@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Trade',
             fields=[
-                ('id', models.BigAutoField(auto_now_add=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('transaction_broker_id', models.CharField(max_length=100)),
                 ('symbol', models.CharField(max_length=10)),
                 ('entry_time', models.DateTimeField()),
@@ -46,7 +46,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='TradeClosePricesMutation',
             fields=[
-                ('id', models.BigAutoField(auto_now_add=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
                 ('mutation_time', models.DateTimeField(auto_now_add=True)),
                 ('mutation_price', models.FloatField(blank=True, null=True)),
                 ('new_tp_price', models.FloatField(blank=True, null=True)),
