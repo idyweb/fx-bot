@@ -35,11 +35,6 @@ TP_PNL_MULTIPLIER = 0.6   # Target profit = 60% of capital (1:3 risk:reward)
 SL_PNL_MULTIPLIER = -0.2  # Max loss = 20% of capital (e.g., $2 on $10)
 
 
-# =============================================================================
-# V3 SAFETY PARAMETERS
-# =============================================================================
-
-# Risk Management (Loaded from .env)
 LEVERAGE = int(os.getenv('RISK_LEVERAGE', 200))
 DEVIATION = 20
 
